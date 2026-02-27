@@ -1,0 +1,116 @@
+stories:
+  - id: story_01_recipe_ai_parser
+    title: AI Recipe Importer
+    description: >
+      As a user, I want to paste a recipe URL or raw text into an input field so that 
+      the app can automatically extract the title, ingredients (with units/quantities), 
+      and prep steps into a structured format without manual data entry.
+    acceptance_criteria:
+      - App has a text area for raw text and an input field for URLs.
+      - App sends the raw input to an LLM endpoint (e.g., OpenAI/Anthropic) with a strict JSON schema prompt.
+      - The extracted data is displayed in a review UI so the user can edit or correct any AI hallucinations before saving.
+      - Saved recipes are stored in the database with normalized ingredient names (e.g., "1/2 cup diced onions" becomes {name: "onion", prep: "diced", amount: 0.5, unit: "cup"}).
+
+  - id: story_02_magic_auto_planner
+    title: Magic Menu Auto-Planner
+    description: >
+      As a user, I want to input weekly preferences (e.g., number of meals, 
+      must-have ingredients, max prep time) so that the app generates a 
+      suggested meal plan, minimizing decision fatigue.
+    acceptance_criteria:
+      - App has a UI to set weekly parameters (meal count, ingredient includes/excludes, max total prep time).
+      - An algorithm queries the recipe database and selects a combination of meals that fit the parameters.
+      - The app attempts to select recipes that share perishable ingredients to minimize food waste.
+      - The generated plan is displayed in a review UI where the user can click "Swap" on an individual meal.
+      - User can "Approve" the final generated menu.
+
+  - id: story_03_smart_shopping_list
+    title: Smart Categorized Shopping List
+    description: >
+      As a user, I want the app to aggregate all ingredients from my approved weekly menu, 
+      subtract items I keep permanently in stock, and group the final list by supermarket 
+      aisle so that my grocery trip is as fast and efficient as possible.
+    acceptance_criteria:
+      - App mathematically aggregates identical ingredients across all selected recipes.
+      - App maintains a user-configurable "Always in Stock" database and automatically filters these out.
+      - App maps each ingredient to a standard supermarket category (Produce, Meat, Dairy, etc.) and renders the list grouped.
+      - UI allows users to manually add ad-hoc items to the list.
+      - UI includes checkboxes to strike through items as they are added to the physical cart.
+
+  - id: story_04_mise_en_place_split
+    title: Phase-Based Step Categorization
+    description: >
+      As a user, I want every recipe to distinctly separate "Prep" tasks (chopping, measuring) 
+      from "Active Cooking" tasks (sauteing, boiling) so that I can practice true mise en place.
+    acceptance_criteria:
+      - The AI Recipe Parser (Story 1) is instructed to categorize extracted steps into `prep_steps` and `active_steps`.
+      - The daily cooking UI presents a checklist of all `prep_steps` first.
+      - The user must complete (or skip) the prep checklist before the UI reveals the `active_steps`.
+
+  - id: story_05_prep_batching_engine
+    title: Weekly Ingredient Prep Batching
+    description: >
+      As a user, I want the app to identify repeated prep tasks across my weekly menu 
+      and combine them into a single task so I only have to wash the cutting board once.
+    acceptance_criteria:
+      - App cross-references the weekly menu for identical ingredients with the same prep state.
+      - App mathematically combines the required amounts into a unified batch task.
+      - Logic includes a simple flag or AI check for "prep-ahead safe" ingredients.
+
+  - id: story_06_prep_session_scheduler
+    title: Custom Prep Session Builder
+    description: >
+      As a user, I want to create dedicated "Prep Sessions" (like a Sunday batch-prep) 
+      and assign batched tasks to them, so my weeknight cooking is as fast as using a meal kit.
+    acceptance_criteria:
+      - UI allows the user to create a "Prep Session" on a specific day.
+      - User can drag and drop batched prep tasks (from Story 5) into this session.
+      - Assigned tasks are automatically removed from the individual recipe's daily instructions (marked as "Already Prepped").
+
+  - id: story_07_data_schema_turso
+    title: Relational SQLite Schema via Turso
+    description: >
+      As a developer, I want to establish a strict SQLite database schema hosted on Turso 
+      so that the app can reliably query recipes, aggregate nested ingredients, and 
+      schedule prep sessions relationally.
+    acceptance_criteria:
+      - App connects to a Turso database URL using a modern ORM (e.g., Drizzle).
+      - Schema includes a `recipes` table (id, title, active_time, prep_time, instructions).
+      - Schema includes an `ingredients` table (id, name, default_category, always_in_stock_flag).
+      - Schema includes a junction table `recipe_ingredients` (recipe_id, ingredient_id, quantity, unit, prep_state).
+      - Schema includes scheduling tables: `menus` (id, date_range) and `prep_sessions` (id, menu_id, scheduled_date).
+
+  - id: story_08_tech_stack_nextjs
+    title: Next.js Full-Stack Architecture Setup
+    description: >
+      As a developer, I want to initialize a Next.js App Router project configured 
+      with Tailwind CSS and Drizzle ORM so that I have a unified full-stack environment.
+    acceptance_criteria:
+      - Project is initialized using `npx create-next-app@latest` with App Router, TypeScript, and Tailwind enabled.
+      - Drizzle ORM is installed and connected to the Turso SQLite database defined in Story 7.
+      - A basic, responsive, mobile-first UI shell is implemented.
+
+  - id: story_09_recipe_seeding_api
+    title: Seed Database via TheMealDB API
+    description: >
+      As a developer, I want to fetch random recipes from the open-source 
+      TheMealDB JSON API so that my Turso database is populated with real-world 
+      data for testing.
+    acceptance_criteria:
+      - A Next.js Server Action fetches data from `https://www.themealdb.com/api/json/v1/1/random.php`.
+      - The script maps TheMealDB's JSON schema into our clean relational schema.
+      - The script downloads or hotlinks the `strMealThumb` image URLs.
+      - The script inserts the transformed data into the Turso database using Drizzle.
+
+  - id: story_10_grocery_cart_automation
+    title: Playwright Grocery Cart Orchestration
+    description: >
+      As a user, I want the app to take my generated Smart Shopping List (Story 3) 
+      and automatically add those items to my Mathem or ICA digital shopping cart 
+      using an invisible browser automation agent.
+    acceptance_criteria:
+      - App includes a Playwright script configured to run headlessly.
+      - The script securely loads user session cookies or credentials to bypass the Mathem/ICA login.
+      - The script iterates through the aggregated shopping list, using the search bar to find each item.
+      - The script clicks the top-rated or cheapest "Add to Cart" button.
+      - Missed or out-of-stock items are logged to an "Items Missed" array and returned to the UI.
