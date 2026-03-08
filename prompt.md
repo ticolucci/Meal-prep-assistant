@@ -15,6 +15,7 @@ STRICT EXECUTION PROTOCOL (TDD & RALPH LOOP):
 - STEP 2 (Test): Write the failing tests first. Do not write implementation code yet.
 - STEP 3 (Implement): Write the minimal Next.js/Drizzle/Playwright code required to make the tests pass.
 - STEP 4 (Verify): Ensure your code fulfills all acceptance criteria for the chosen story.
+- STEP 4.5 (Atomic Commit): Whenever you reach a meaningful, complete state where ALL tests pass and the codebase has changed significantly, make an atomic git commit immediately. This creates safe revert points. Use a clear, descriptive commit message. Do not batch multiple logical changes into one commit — one working milestone = one commit.
 - STEP 5 (State Persistence): Append your technical learnings, new dependencies, or structural context to `learnings.yaml`. This is how you pass memory to your future self in the next loop.
 
 CONSTRAINTS:
