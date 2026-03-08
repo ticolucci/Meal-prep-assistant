@@ -1,1 +1,53 @@
-learnings: []
+learnings:
+  - id: l01_playwright_setup
+    story: story_08_tech_stack_nextjs
+    date: "2026-03-08"
+    context: >
+      Playwright is installed as a dev dependency. Only Chromium was installed
+      (npx playwright install chromium). The mobile project in playwright.config.ts
+      uses devices["iPhone 12"] but overrides defaultBrowserType to "chromium"
+      to avoid needing a WebKit installation.
+    gotcha: >
+      The Next.js dev overlay (nextjs-portal) intercepts pointer events at the bottom
+      of the viewport on narrow mobile screens, causing click actions to fail.
+      Fix: use .click({ force: true }) on nav links in Playwright tests. This is a
+      dev-mode artifact only — not a production issue.
+
+  - id: l02_bottom_nav_active_state
+    story: story_08_tech_stack_nextjs
+    date: "2026-03-08"
+    context: >
+      BottomNav is a "use client" component that uses usePathname() from next/navigation
+      to determine the active tab. Active tabs receive aria-current="page" for
+      accessibility and test assertion, plus emerald-600 text colour.
+    path: src/components/BottomNav.tsx
+
+  - id: l03_routing_structure
+    story: story_08_tech_stack_nextjs
+    date: "2026-03-08"
+    context: >
+      Four tab routes are established: /recipes, /plan, /shopping, /prep.
+      The root path (/) redirects to /recipes via next/navigation redirect().
+      Each route has a placeholder page.tsx. The layout at src/app/layout.tsx
+      wraps all pages with <main className="pb-16"> to avoid content being hidden
+      behind the fixed bottom nav (h-16).
+
+  - id: l04_next_story_candidates
+    story: story_08_tech_stack_nextjs
+    date: "2026-03-08"
+    context: >
+      With the shell complete, the highest-value next stories are:
+      1. story_09_recipe_seeding_api — populates the DB with real recipes for testing.
+         This unblocks story_01, story_02, story_03, story_04, story_05.
+      2. story_01_recipe_ai_parser — requires Anthropic API key (ANTHROPIC_API_KEY env var).
+      Recommend story_09 next because it has no external API key dependency and seeds
+      real data that all subsequent stories can rely on.
+
+  - id: l05_drizzle_schema_note
+    story: story_08_tech_stack_nextjs
+    date: "2026-03-08"
+    context: >
+      No schema has been created yet. src/db/index.ts has the Drizzle client connected
+      to Turso via TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.
+      First story requiring persistence (story_09) should create src/db/schema.ts
+      and run: npx drizzle-kit generate && npx drizzle-kit migrate.
