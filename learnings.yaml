@@ -101,6 +101,101 @@ learnings:
       Recommend story_01 next as it enriches recipe data quality for all downstream
       stories (planning, shopping list, prep batching).
 
+  - id: l11_vitest_infrastructure
+    story: story_01_recipe_ai_parser
+    date: "2026-03-08"
+    context: >
+      Vitest is now fully configured (vitest.config.ts). Key settings:
+      - env: { TURSO_DATABASE_URL: "file:./test.db", TURSO_AUTH_TOKEN: "local",
+        ANTHROPIC_API_KEY: "test-key-for-vitest" } — so Server Actions that
+        guard on these vars work in tests without real credentials.
+      - globalSetup: src/test/globalSetup.ts runs `drizzle-kit migrate` against
+        test.db before the suite and deletes test.db in teardown.
+      - setupFiles: src/test/setup.ts mocks next/cache (revalidatePath,
+        revalidateTag) globally — they throw outside Next.js request context.
+      - test-client: src/db/test-client.ts creates a Drizzle client pointed at
+        file:./test.db. Import this in integration tests instead of @/db.
+      - factories: src/test/factories.ts — makeRecipe(), makeIngredient().
+    npm_scripts: >
+      "test:unit": "vitest run",
+      "test:e2e": "playwright test",
+      "test": "vitest run && playwright test"
+
+  - id: l12_parser_lib
+    story: story_01_recipe_ai_parser
+    date: "2026-03-08"
+    context: >
+      src/lib/themealdb.ts — extractIngredients() pure function extracted from
+      seed.ts. seed.ts now imports it from there.
+      src/lib/parser.ts — parseAmount(measure) and normalizeIngredient(name, measure)
+      pure functions. parseAmount handles: whole numbers, decimals, simple
+      fractions (3/4), mixed numbers (1 1/2), number+unit (200g, 1 tsp),
+      qualitative measures (pinch, to taste). normalizeIngredient detects prep
+      from PREP_PREFIXES list (prefix pattern) or comma-suffix ("name, prep").
+    coverage: >
+      22 unit tests total (5 extractIngredients, 17 parseAmount/normalizeIngredient).
+      All pass with no DB or HTTP dependencies.
+
+  - id: l13_parse_recipe_action
+    story: story_01_recipe_ai_parser
+    date: "2026-03-08"
+    context: >
+      src/app/actions/parse-recipe.ts — parseRecipeText(rawText) Server Action.
+      Calls Anthropic Claude Haiku (claude-haiku-4-5-20251001) via direct fetch
+      (no SDK — avoids an additional dependency). Uses a system prompt that
+      returns strict JSON: { title, prep_steps[], active_steps[], ingredients[] }.
+      Saves recipe to DB with source="ai", stores prep_steps/active_steps as
+      JSON strings in the new schema columns. Returns the parsed object so the
+      UI can show a review panel before the user navigates away.
+    gotcha: >
+      Integration tests must stub global fetch BEFORE importing the action module
+      (or use vi.stubGlobal in beforeEach). Module import caching means a mock
+      set after import has no effect. Pattern: vi.stubGlobal("fetch", mock) then
+      const { parseRecipeText } = await import("./parse-recipe").
+    requires: ANTHROPIC_API_KEY in .env.local
+
+  - id: l14_schema_prep_steps
+    story: story_01_recipe_ai_parser
+    date: "2026-03-08"
+    context: >
+      Migration 0001_amazing_network.sql adds prep_steps TEXT and active_steps
+      TEXT columns to the `recipes` table. Values are JSON-serialized string
+      arrays (e.g. '["Dice onion","Mince garlic"]'). story_04 (mise en place UI)
+      should read these columns directly and parse them with JSON.parse().
+      TheMealDB-seeded rows have NULL in both columns — that is expected.
+
+  - id: l15_import_ui
+    story: story_01_recipe_ai_parser
+    date: "2026-03-08"
+    context: >
+      /recipes/import — RecipeImportForm.tsx client component. Flow:
+      1. User pastes URL or raw text into <textarea data-testid="recipe-input">.
+      2. Submit calls parseRecipeText Server Action.
+      3. On success, shows read-only review panel (data-testid="import-success")
+         with parsed title, ingredients list, prep steps, active steps.
+      4. "View All Recipes" button redirects to /recipes.
+      No editable review (that is story_01b — deferred). Full editable review
+      UI should be added before the app goes to production.
+    deferred: >
+      Editable review UI (let user correct AI hallucinations before saving) was
+      deferred. Current flow: AI output → immediate save → read-only review.
+      Add story_01b to stories.yaml when ready to implement the edit flow.
+
+  - id: l16_next_story_candidates
+    story: story_01_recipe_ai_parser
+    date: "2026-03-08"
+    context: >
+      story_01 is implemented (parser, action, import UI). Deferred: editable
+      review UI (story_01b — to be added to stories.yaml).
+      Next highest-value stories:
+      1. story_02_magic_auto_planner — needs recipes in DB (now unblocked).
+         Algorithm selects meals fitting weekly params; pure function
+         (selectMealPlan) is unit-testable. No external API.
+      2. story_04_mise_en_place_split — prep_steps/active_steps columns now
+         exist; can build the cooking UI checklist immediately.
+      3. story_03_smart_shopping_list — depends on story_02 approval flow.
+      Recommend story_02 next: highest value unlock (opens 03, 05, 06).
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"

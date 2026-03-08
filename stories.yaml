@@ -11,6 +11,21 @@ stories:
       - The extracted data is displayed in a review UI so the user can edit or correct any AI hallucinations before saving.
       - Saved recipes are stored in the database with normalized ingredient names (e.g., "1/2 cup diced onions" becomes {name: "onion", prep: "diced", amount: 0.5, unit: "cup"}).
 
+  - id: story_01b_recipe_review_edit_ui
+    title: Editable AI Recipe Review UI
+    description: >
+      As a user, after the AI parses my recipe I want to review and edit the
+      extracted ingredients and steps before saving, so I can correct any
+      AI hallucinations before they enter the database.
+    acceptance_criteria:
+      - The review panel (shown after AI parsing) renders each ingredient as an
+        editable row (name, prep, amount, unit fields).
+      - The user can add or remove ingredient rows.
+      - The user can edit prep_steps and active_steps as editable list items.
+      - A "Save Recipe" button submits the corrected data to the DB.
+      - Cancelling discards the parse result and returns the user to the import form.
+    depends_on: story_01_recipe_ai_parser
+
   - id: story_02_magic_auto_planner
     title: Magic Menu Auto-Planner
     description: >
