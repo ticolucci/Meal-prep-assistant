@@ -44,10 +44,59 @@ learnings:
       real data that all subsequent stories can rely on.
 
   - id: l05_drizzle_schema_note
-    story: story_08_tech_stack_nextjs
+    story: story_09_recipe_seeding_api
     date: "2026-03-08"
     context: >
-      No schema has been created yet. src/db/index.ts has the Drizzle client connected
-      to Turso via TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.
-      First story requiring persistence (story_09) should create src/db/schema.ts
-      and run: npx drizzle-kit generate && npx drizzle-kit migrate.
+      Schema created at src/db/schema.ts. Two tables: `recipes` (id, external_id,
+      title, image_url, instructions, source, created_at) and `recipe_ingredients`
+      (id, recipe_id, name, measure, amount, unit, prep). Migration applied to
+      local.db (file:./local.db). amount/unit/prep columns exist but are null for
+      TheMealDB seeds — story_01 (AI parser) should populate them via normalization.
+    gotcha: >
+      drizzle-kit migrate requires a non-empty TURSO_AUTH_TOKEN even for local SQLite
+      file URLs. Use a dummy value like "local" for development. The @libsql/client
+      runtime accepts TURSO_AUTH_TOKEN="local" for file: URLs without complaining.
+      .env.local is gitignored — ensure new devs create it from .env.local.example.
+
+  - id: l06_seed_action
+    story: story_09_recipe_seeding_api
+    date: "2026-03-08"
+    context: >
+      Server Action at src/app/actions/seed.ts fetches ONE random meal from
+      https://www.themealdb.com/api/json/v1/1/random.php, deduplicates by externalId,
+      inserts recipe + up to 20 ingredients. Uses revalidatePath('/recipes') to
+      trigger RSC re-render after insert.
+    path: src/app/actions/seed.ts
+
+  - id: l07_recipes_page
+    story: story_09_recipe_seeding_api
+    date: "2026-03-08"
+    context: >
+      src/app/recipes/page.tsx is a React Server Component with `export const dynamic
+      = "force-dynamic"` to prevent static caching. It SSRs the recipe list from DB.
+      SeedButton (src/components/SeedButton.tsx) is a "use client" component using
+      useTransition to call the seedRecipes Server Action without a page reload.
+      TheMealDB image hostname is whitelisted in next.config.ts remotePatterns.
+    gotcha: >
+      Without `export const dynamic = "force-dynamic"`, Next.js will statically
+      render the recipes page at build time (showing 0 recipes always).
+
+  - id: l08_playwright_or_strict_mode
+    story: story_09_recipe_seeding_api
+    date: "2026-03-08"
+    context: >
+      Playwright's locator.or() can violate strict mode when BOTH branches match.
+      Fix: append .first() AFTER .or() — i.e., locatorA.or(locatorB).first() —
+      not before.
+
+  - id: l09_next_story_candidates
+    story: story_09_recipe_seeding_api
+    date: "2026-03-08"
+    context: >
+      With DB seeded, the highest-value next stories are:
+      1. story_01_recipe_ai_parser — AI parsing of URLs/text into our schema.
+         Requires ANTHROPIC_API_KEY in .env.local.
+      2. story_02_magic_auto_planner — needs recipes in DB (now unblocked).
+      3. story_04_mise_en_place_split — depends on story_01 (prep/active step split).
+      Recommend story_01 next as it enriches recipe data quality for all downstream
+      stories (planning, shopping list, prep batching).
