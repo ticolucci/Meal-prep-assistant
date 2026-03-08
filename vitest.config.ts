@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    // Integration tests share a single test.db — disable parallel file execution
+    // to prevent race conditions between test files writing to the same SQLite file.
+    fileParallelism: false,
     include: ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.integration.test.ts"],
     exclude: ["tests/**"],
     setupFiles: ["src/test/setup.ts"],

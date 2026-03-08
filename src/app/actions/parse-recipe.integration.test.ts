@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { testDb } from "@/db/test-client";
-import { recipes, recipeIngredients } from "@/db/schema";
+import { recipes, recipeIngredients, mealPlanRecipes, mealPlans } from "@/db/schema";
 
 // We must import AFTER vi.stubGlobal because globalSetup runs before each file
 beforeEach(() => {
@@ -28,7 +28,9 @@ const MOCK_ANTHROPIC_RESPONSE = {
 
 describe("parseRecipeText (integration)", () => {
   beforeEach(async () => {
-    // Clear tables before each test
+    // Clear tables before each test (FK order: dependents first)
+    await testDb.delete(mealPlanRecipes);
+    await testDb.delete(mealPlans);
     await testDb.delete(recipeIngredients);
     await testDb.delete(recipes);
   });
