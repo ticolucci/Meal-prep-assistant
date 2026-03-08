@@ -100,3 +100,57 @@ learnings:
       3. story_04_mise_en_place_split — depends on story_01 (prep/active step split).
       Recommend story_01 next as it enriches recipe data quality for all downstream
       stories (planning, shopping list, prep batching).
+
+  - id: l10_test_pyramid_gap
+    story: cross-cutting
+    date: "2026-03-08"
+    context: >
+      The test suite is currently 100% E2E (17 Playwright browser tests, 0 unit,
+      0 integration). This is an inverted pyramid: slow feedback, brittle to UI
+      changes, and leaves all pure logic (ingredient mapping, aggregation, parsing)
+      uncovered below the browser layer.
+
+      TARGET PYRAMID:
+        Unit (Vitest)       ~60% — pure functions, schema mappers, aggregation logic
+        Integration (Vitest) ~25% — Server Actions + real local SQLite (file:./test.db)
+        E2E (Playwright)    ~15% — critical user journeys only (not logic assertions)
+
+      MOCK PHILOSOPHY (to be followed in all future test layers):
+        DO mock: external HTTP calls (TheMealDB, Anthropic API, any fetch to a
+          third-party host), the system clock (Date.now / new Date()), and any
+          source of randomness. These are "impure" inputs that would require a
+          monad boundary in a functional language — they make tests non-deterministic
+          if left uncontrolled.
+        DO NOT mock: the local database, Server Actions, internal query helpers,
+          or React components. These are local dependencies that are cheap to
+          configure with seed/factory data. Mocking them only tests the mock,
+          not the real behaviour. Use a dedicated test SQLite file (file:./test.db)
+          seeded with factories instead.
+
+      IMPLEMENTATION PLAN (to be executed as a cross-cutting refactor story):
+        1. Install Vitest + @vitejs/plugin-react + vitest-environment-miniflare (or
+           jsdom) as devDependencies. Add a vitest.config.ts that points at
+           src/**/*.test.ts and excludes Playwright files.
+        2. Add a src/db/test-client.ts that creates a Drizzle client pointed at
+           file:./test.db. Vitest globalSetup runs drizzle-kit migrate against it
+           and truncates all tables between test files (not between individual tests
+           unless isolation is needed).
+        3. Add src/test/factories.ts with typed factory functions (makeRecipe,
+           makeIngredient, etc.) that insert rows into test.db and return the
+           inserted record. Tests call factories directly — no fixtures files.
+        4. Retrofit existing logic into unit-testable pure functions first:
+             - extractIngredients() in seed.ts → move to src/lib/themealdb.ts, test it.
+             - Future: aggregateIngredients() for story_03, batchPrepTasks() for
+               story_05 — these MUST be pure functions (no DB calls inside).
+        5. Move Playwright tests to coarse-grained journey tests only. Remove any
+           Playwright assertions that are really logic assertions (e.g. exact
+           ingredient counts) and cover those with Vitest integration tests instead.
+        6. Add npm scripts: "test:unit" (vitest run), "test:e2e" (playwright test),
+           "test" (vitest run && playwright test).
+
+      DEFERRED REFACTORS NOTICED DURING story_09:
+        - extractIngredients() is embedded inside seed.ts. It is a pure function and
+          should live in src/lib/themealdb.ts so it can be unit-tested independently
+          of the Server Action and its "use server" boundary.
+        - The recipes page fetches all rows with no pagination. Once the DB has >20
+          recipes this will become slow. Add cursor-based pagination before story_02.

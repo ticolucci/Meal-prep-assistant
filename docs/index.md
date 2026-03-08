@@ -17,10 +17,14 @@ A Next.js full-stack application that helps users organize weekly meal prep. It 
 | `prompt.md` | The system prompt that drives each Ralph loop execution |
 | `docs/index.md` | This file — project overview and architectural principles |
 | `docs/tos-analysis.md` | Terms of Service analysis for Mathem and ICA (reference only) |
+| `docs/testing.md` | Testing philosophy, pyramid target, mock rules, factory pattern — READ THIS before writing any test |
 | `drizzle.config.ts` | Drizzle ORM / Turso configuration |
 | `src/db/index.ts` | Database client connection |
 
 ## Architectural Principles
+
+### Testing
+See `docs/testing.md` for the full strategy. Short version: unit tests (Vitest) for pure functions, integration tests (Vitest + real local SQLite `test.db`) for Server Actions and queries, E2E (Playwright) for user journeys only. Mock external HTTP and time; never mock the local DB or internal code.
 
 ### Evolving Database
 Do NOT design the full schema upfront. Each story creates only the tables and columns it immediately needs via Drizzle migrations. When a future story needs schema changes, create a migration to evolve the database. This mirrors TDD: minimal, incremental, just-in-time.
