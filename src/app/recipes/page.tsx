@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { recipes } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import Image from "next/image";
+import Link from "next/link";
 import SeedButton from "@/components/SeedButton";
 import type { Recipe } from "@/db/schema";
 
@@ -20,7 +21,16 @@ export default async function RecipesPage() {
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
           Recipes
         </h1>
-        <SeedButton />
+        <div className="flex items-center gap-2">
+          <Link
+            href="/recipes/import"
+            data-testid="import-recipe-link"
+            className="rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50"
+          >
+            + Import
+          </Link>
+          <SeedButton />
+        </div>
       </div>
 
       {allRecipes.length === 0 ? (
@@ -59,6 +69,11 @@ export default async function RecipesPage() {
                 {recipe.source === "themealdb" && (
                   <span className="mt-1 inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
                     TheMealDB
+                  </span>
+                )}
+                {recipe.source === "ai" && (
+                  <span className="mt-1 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-xs text-violet-700">
+                    AI Import
                   </span>
                 )}
               </div>

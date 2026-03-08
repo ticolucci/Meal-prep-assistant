@@ -7,7 +7,9 @@ export const recipes = sqliteTable("recipes", {
   title: text("title").notNull(),
   imageUrl: text("image_url"),
   instructions: text("instructions"),
-  source: text("source").notNull().default("manual"), // 'themealdb' | 'manual'
+  prepSteps: text("prep_steps"), // JSON array of prep step strings
+  activeSteps: text("active_steps"), // JSON array of active cooking step strings
+  source: text("source").notNull().default("manual"), // 'themealdb' | 'manual' | 'ai'
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),

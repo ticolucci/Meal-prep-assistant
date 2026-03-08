@@ -4,35 +4,11 @@ import { db } from "@/db";
 import { recipes, recipeIngredients } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
+import { extractIngredients } from "@/lib/themealdb";
+import type { MealDBResponse } from "@/lib/themealdb";
 
 const THEMEALDB_URL =
   "https://www.themealdb.com/api/json/v1/1/random.php";
-
-interface MealDBMeal {
-  idMeal: string;
-  strMeal: string;
-  strMealThumb: string;
-  strInstructions: string;
-  [key: string]: string | null;
-}
-
-interface MealDBResponse {
-  meals: MealDBMeal[] | null;
-}
-
-function extractIngredients(
-  meal: MealDBMeal
-): { name: string; measure: string }[] {
-  const ingredients: { name: string; measure: string }[] = [];
-  for (let i = 1; i <= 20; i++) {
-    const name = (meal[`strIngredient${i}`] ?? "").trim();
-    const measure = (meal[`strMeasure${i}`] ?? "").trim();
-    if (name) {
-      ingredients.push({ name, measure });
-    }
-  }
-  return ingredients;
-}
 
 export async function seedRecipes(): Promise<{
   success: boolean;
