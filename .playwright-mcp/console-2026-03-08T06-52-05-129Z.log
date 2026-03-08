@@ -1,0 +1,2 @@
+[     511ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ https://www.ica.se/appar-och-tjanster/appen-ica/villkor/:229
+[    1255ms] [WARNING] An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing. @ https://www.ica.se/static/singlesignon/authorizationcallbacksilent.html?error_description=Could+not+login+with+SSO&iss=https%3A%2F%2Fims.icagruppen.se%2F%7E&error=login_required:0

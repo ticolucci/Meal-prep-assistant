@@ -2,8 +2,8 @@ stories:
   - id: story_01_recipe_ai_parser
     title: AI Recipe Importer
     description: >
-      As a user, I want to paste a recipe URL or raw text into an input field so that 
-      the app can automatically extract the title, ingredients (with units/quantities), 
+      As a user, I want to paste a recipe URL or raw text into an input field so that
+      the app can automatically extract the title, ingredients (with units/quantities),
       and prep steps into a structured format without manual data entry.
     acceptance_criteria:
       - App has a text area for raw text and an input field for URLs.
@@ -14,8 +14,8 @@ stories:
   - id: story_02_magic_auto_planner
     title: Magic Menu Auto-Planner
     description: >
-      As a user, I want to input weekly preferences (e.g., number of meals, 
-      must-have ingredients, max prep time) so that the app generates a 
+      As a user, I want to input weekly preferences (e.g., number of meals,
+      must-have ingredients, max prep time) so that the app generates a
       suggested meal plan, minimizing decision fatigue.
     acceptance_criteria:
       - App has a UI to set weekly parameters (meal count, ingredient includes/excludes, max total prep time).
@@ -27,8 +27,8 @@ stories:
   - id: story_03_smart_shopping_list
     title: Smart Categorized Shopping List
     description: >
-      As a user, I want the app to aggregate all ingredients from my approved weekly menu, 
-      subtract items I keep permanently in stock, and group the final list by supermarket 
+      As a user, I want the app to aggregate all ingredients from my approved weekly menu,
+      subtract items I keep permanently in stock, and group the final list by supermarket
       aisle so that my grocery trip is as fast and efficient as possible.
     acceptance_criteria:
       - App mathematically aggregates identical ingredients across all selected recipes.
@@ -40,7 +40,7 @@ stories:
   - id: story_04_mise_en_place_split
     title: Phase-Based Step Categorization
     description: >
-      As a user, I want every recipe to distinctly separate "Prep" tasks (chopping, measuring) 
+      As a user, I want every recipe to distinctly separate "Prep" tasks (chopping, measuring)
       from "Active Cooking" tasks (sauteing, boiling) so that I can practice true mise en place.
     acceptance_criteria:
       - The AI Recipe Parser (Story 1) is instructed to categorize extracted steps into `prep_steps` and `active_steps`.
@@ -50,7 +50,7 @@ stories:
   - id: story_05_prep_batching_engine
     title: Weekly Ingredient Prep Batching
     description: >
-      As a user, I want the app to identify repeated prep tasks across my weekly menu 
+      As a user, I want the app to identify repeated prep tasks across my weekly menu
       and combine them into a single task so I only have to wash the cutting board once.
     acceptance_criteria:
       - App cross-references the weekly menu for identical ingredients with the same prep state.
@@ -60,41 +60,33 @@ stories:
   - id: story_06_prep_session_scheduler
     title: Custom Prep Session Builder
     description: >
-      As a user, I want to create dedicated "Prep Sessions" (like a Sunday batch-prep) 
+      As a user, I want to create dedicated "Prep Sessions" (like a Sunday batch-prep)
       and assign batched tasks to them, so my weeknight cooking is as fast as using a meal kit.
     acceptance_criteria:
       - UI allows the user to create a "Prep Session" on a specific day.
       - User can drag and drop batched prep tasks (from Story 5) into this session.
       - Assigned tasks are automatically removed from the individual recipe's daily instructions (marked as "Already Prepped").
 
-  - id: story_07_data_schema_turso
-    title: Relational SQLite Schema via Turso
-    description: >
-      As a developer, I want to establish a strict SQLite database schema hosted on Turso 
-      so that the app can reliably query recipes, aggregate nested ingredients, and 
-      schedule prep sessions relationally.
-    acceptance_criteria:
-      - App connects to a Turso database URL using a modern ORM (e.g., Drizzle).
-      - Schema includes a `recipes` table (id, title, active_time, prep_time, instructions).
-      - Schema includes an `ingredients` table (id, name, default_category, always_in_stock_flag).
-      - Schema includes a junction table `recipe_ingredients` (recipe_id, ingredient_id, quantity, unit, prep_state).
-      - Schema includes scheduling tables: `menus` (id, date_range) and `prep_sessions` (id, menu_id, scheduled_date).
-
   - id: story_08_tech_stack_nextjs
     title: Next.js Full-Stack Architecture Setup
     description: >
-      As a developer, I want to initialize a Next.js App Router project configured 
-      with Tailwind CSS and Drizzle ORM so that I have a unified full-stack environment.
+      As a developer, I want to initialize a Next.js App Router project configured
+      with Tailwind CSS and Drizzle ORM so that I have a unified full-stack environment
+      with a responsive, mobile-first UI shell.
     acceptance_criteria:
       - Project is initialized using `npx create-next-app@latest` with App Router, TypeScript, and Tailwind enabled.
-      - Drizzle ORM is installed and connected to the Turso SQLite database defined in Story 7.
-      - A basic, responsive, mobile-first UI shell is implemented.
+      - Drizzle ORM is installed and connected to the Turso SQLite database.
+      - A responsive, mobile-first UI shell is implemented with a bottom navigation bar.
+      - Bottom nav includes four tabs — Recipes, Plan, Shopping, and Prep.
+      - Each tab routes to its own page (can be a placeholder).
+      - The shell renders correctly on mobile viewport widths (375px+).
+      - Active tab is visually highlighted in the bottom nav.
 
   - id: story_09_recipe_seeding_api
     title: Seed Database via TheMealDB API
     description: >
-      As a developer, I want to fetch random recipes from the open-source 
-      TheMealDB JSON API so that my Turso database is populated with real-world 
+      As a developer, I want to fetch random recipes from the open-source
+      TheMealDB JSON API so that my Turso database is populated with real-world
       data for testing.
     acceptance_criteria:
       - A Next.js Server Action fetches data from `https://www.themealdb.com/api/json/v1/1/random.php`.
@@ -105,12 +97,32 @@ stories:
   - id: story_10_grocery_cart_automation
     title: Playwright Grocery Cart Orchestration
     description: >
-      As a user, I want the app to take my generated Smart Shopping List (Story 3) 
-      and automatically add those items to my Mathem or ICA digital shopping cart 
-      using an invisible browser automation agent.
+      As a user, I want the app to take my generated Smart Shopping List (Story 3)
+      and automatically add those items to my Mathem or ICA digital shopping cart
+      using a browser automation agent.
     acceptance_criteria:
       - App includes a Playwright script configured to run headlessly.
-      - The script securely loads user session cookies or credentials to bypass the Mathem/ICA login.
+      - User handles login manually — the tool does not store or manage credentials.
+      - A disclaimer is shown before the first automation run, explaining what the tool does and the user's responsibility.
       - The script iterates through the aggregated shopping list, using the search bar to find each item.
       - The script clicks the top-rated or cheapest "Add to Cart" button.
       - Missed or out-of-stock items are logged to an "Items Missed" array and returned to the UI.
+      - User must review and confirm the cart before checkout — the tool never places an order.
+
+  - id: story_11_user_risk_disclosure
+    title: User Risk Disclosure & System Capabilities
+    description: >
+      As a user, I want to see a first-run disclaimer/consent screen that explains
+      what the app does (and doesn't do) so that I understand the system's capabilities
+      and my responsibilities before using automation features.
+    acceptance_criteria:
+      - A first-run consent screen is displayed before the user can access automation features.
+      - "The disclaimer clearly explains:"
+      - "  - What the tool automates (adding items to your grocery cart via browser automation)."
+      - "  - What the tool does NOT do (store credentials, place orders, or access accounts without the user being logged in)."
+      - "  - That the user is responsible for reviewing their cart before confirming any order."
+      - "  - That this is a personal productivity tool, not a commercial service."
+      - User must accept the disclaimer to proceed.
+      - Acceptance is persisted (e.g., in local storage or the database) so the screen is not shown again.
+      - A "System Capabilities" section is accessible from app settings, summarizing what the tool can and cannot do.
+      - See docs/tos-analysis.md for the full Mathem/ICA ToS analysis backing these decisions.
