@@ -196,6 +196,83 @@ learnings:
       3. story_03_smart_shopping_list — depends on story_02 approval flow.
       Recommend story_02 next: highest value unlock (opens 03, 05, 06).
 
+  - id: l17_planner_algorithm
+    story: story_02_magic_auto_planner
+    date: "2026-03-08"
+    context: >
+      src/lib/planner.ts — selectMealPlan(candidates, params) pure function.
+      Filters by excludeIngredients, includeIngredients (ingredient name match,
+      case-insensitive), maxPrepMinutes (null prepMinutes = keep, assume unknown).
+      Then greedily selects recipes maximising ingredient overlap with already-
+      selected meals (minimises food waste / shopping list length). Deterministic:
+      sorts pool by ID before greedy loop, uses ID as tiebreaker.
+    gotcha: >
+      The algorithm is purely greedy, not optimal (NP-hard to find truly optimal
+      set). For small DBs (<100 recipes) this is fine. If the DB grows large,
+      consider a randomised restart approach or simulated annealing.
+
+  - id: l18_meal_plan_schema
+    story: story_02_magic_auto_planner
+    date: "2026-03-08"
+    context: >
+      Migration 0002_equal_mysterio.sql adds:
+        - meal_plans (id, status, meal_count, params JSON, created_at)
+        - meal_plan_recipes (id, plan_id FK, recipe_id FK, position)
+        - prepMinutes INTEGER nullable column to recipes
+      Status values: 'draft' | 'approved'. Only the most recent draft plan is
+      shown in the UI. story_03 (shopping list) should query the latest approved
+      plan using: WHERE status = 'approved' ORDER BY created_at DESC LIMIT 1.
+
+  - id: l19_plan_page_ui
+    story: story_02_magic_auto_planner
+    date: "2026-03-08"
+    context: >
+      /plan page is a RSC (force-dynamic) that loads the latest draft plan and
+      all recipes, then renders MealPlanClient.tsx (client component). Flow:
+        1. Params form → generateMealPlan Server Action → window.location.reload()
+        2. Review panel: each meal row has a Swap button that reveals a <select>
+           of recipes not already in the plan.
+        3. Approve button → approveMealPlan Server Action.
+      The UI uses window.location.reload() after actions to re-fetch RSC data.
+      This is simple but coarse — a future refactor could use router.refresh()
+      from useRouter() for a smoother UX without a full page reload.
+    deferred: >
+      Swap UX: currently swaps by selecting from a dropdown of ALL other recipes.
+      A better UX would show swap suggestions scored by ingredient overlap with
+      the rest of the plan. Defer to a later polish story.
+      prepMinutes: currently null for all DB recipes (TheMealDB doesn't expose it).
+      AI parser (story_01) could extract prep time from recipe text and save it.
+
+  - id: l20_vitest_parallelism_fix
+    story: story_02_magic_auto_planner
+    date: "2026-03-08"
+    context: >
+      Vitest runs test files in parallel by default. Integration test files that
+      share the same test.db will race each other, causing non-deterministic
+      failures (e.g. afterEach cleanup in one file interleaves with inserts in
+      another). Fix: add `fileParallelism: false` to vitest.config.ts test block.
+      This runs all test files sequentially. Since unit tests are fast (~10ms),
+      the overhead is negligible (~9s total suite time).
+    gotcha: >
+      Also update every integration test file's beforeEach to delete FROM ALL
+      tables in FK-safe order (dependents first). The canonical order for this
+      project is: mealPlanRecipes → mealPlans → recipeIngredients → recipes.
+
+  - id: l21_next_story_candidates
+    story: story_02_magic_auto_planner
+    date: "2026-03-08"
+    context: >
+      story_02 is complete (algorithm, DB schema, Server Actions, UI, tests).
+      Next highest-value stories:
+      1. story_03_smart_shopping_list — now fully unblocked (needs approved plan).
+         aggregateIngredients() is a pure function; unit-testable. Depends on
+         getting the latest approved plan's recipes + their ingredients.
+      2. story_04_mise_en_place_split — prep_steps/active_steps columns exist.
+         Can build the cooking UI checklist (prep phase → active phase) now.
+      3. story_01b_recipe_review_edit_ui — editable review before DB save.
+      Recommend story_03 next: it delivers end-user value (grocery list from
+      approved plan) and its core logic is a pure aggregation function.
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"
