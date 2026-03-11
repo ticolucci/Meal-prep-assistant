@@ -22,6 +22,13 @@
       "when": 1772959005937,
       "tag": "0002_equal_mysterio",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1773041435177,
+      "tag": "0003_perfect_the_professor",
+      "breakpoints": true
     }
   ]
 }

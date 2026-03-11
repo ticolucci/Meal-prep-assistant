@@ -50,6 +50,23 @@ export const mealPlanRecipes = sqliteTable("meal_plan_recipes", {
   position: integer("position").notNull().default(0),
 });
 
+export const pantryItems = sqliteTable("pantry_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export const shoppingListExtra = sqliteTable("shopping_list_extra", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  checked: integer("checked").notNull().default(0), // 0 | 1 (SQLite boolean)
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 export type RecipeIngredient = typeof recipeIngredients.$inferSelect;
@@ -57,4 +74,8 @@ export type NewRecipeIngredient = typeof recipeIngredients.$inferInsert;
 export type MealPlan = typeof mealPlans.$inferSelect;
 export type NewMealPlan = typeof mealPlans.$inferInsert;
 export type MealPlanRecipe = typeof mealPlanRecipes.$inferSelect;
+export type PantryItem = typeof pantryItems.$inferSelect;
+export type NewPantryItem = typeof pantryItems.$inferInsert;
+export type ShoppingExtra = typeof shoppingListExtra.$inferSelect;
+export type NewShoppingExtra = typeof shoppingListExtra.$inferInsert;
 export type NewMealPlanRecipe = typeof mealPlanRecipes.$inferInsert;
