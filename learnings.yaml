@@ -273,6 +273,69 @@ learnings:
       Recommend story_03 next: it delivers end-user value (grocery list from
       approved plan) and its core logic is a pure aggregation function.
 
+  - id: l22_shopping_list_implementation
+    story: story_03_smart_shopping_list
+    date: "2026-03-11"
+    context: >
+      story_03 is complete. Key files:
+        - src/lib/shopping.ts: aggregateIngredients(), categorizeIngredient(),
+          subtractPantry() — all pure functions. Groups by (name, unit) key,
+          sums amounts (null treated as 0 in a non-null sum), sorts by
+          category then name.
+        - src/app/actions/shopping.ts: getShoppingList(), addPantryItem(),
+          removePantryItem(), addAdHocItem(), toggleAdHocItem(), removeAdHocItem().
+          getShoppingList() orders approved plans by (createdAt DESC, id DESC)
+          to break ties when two plans share the same unixepoch() timestamp.
+        - src/components/ShoppingListClient.tsx: client component. Uses
+          router.refresh() (not window.location.reload()) to preserve React
+          state (pantry section open/close) across mutations.
+        - /shopping page: RSC with export const dynamic = "force-dynamic".
+      DB: pantry_items (id, name UNIQUE, created_at) and
+      shopping_list_extra (id, name, checked INTEGER 0|1, created_at).
+      Migration: 0003_perfect_the_professor.sql.
+    gotcha: >
+      E2E form submission: clicking a <button type="submit"> with
+      playwright's force:true does NOT trigger the parent <form>'s onSubmit
+      handler reliably. Use input.press("Enter") instead to submit forms in
+      Playwright tests. This applies to ALL future E2E tests that test form
+      submissions.
+    gotcha2: >
+      router.refresh() vs window.location.reload(): prefer router.refresh()
+      in App Router client components — it re-fetches RSC without a full
+      browser navigation, preserving React client state (e.g. toggle open/close).
+      window.location.reload() causes a full navigation and resets all useState.
+
+  - id: l23_pre_existing_meal_plan_e2e_failure
+    story: story_03_smart_shopping_list
+    date: "2026-03-11"
+    context: >
+      tests/meal-plan.spec.ts:33 ("user can generate, swap, and approve a
+      meal plan") fails on both chromium and mobile with
+      "plan-approved-badge" not found. This is a PRE-EXISTING failure
+      (MealPlanClient uses window.location.reload() which resets state).
+      Fix: refactor MealPlanClient to use router.refresh() instead of
+      window.location.reload(), and update the test to not expect a badge
+      if the page reloads. Deferred to a future polish story.
+
+  - id: l24_next_story_candidates
+    story: story_03_smart_shopping_list
+    date: "2026-03-11"
+    context: >
+      story_03 complete (shopping list from approved plan, pantry management,
+      ad-hoc items, category grouping, checkboxes).
+      Next highest-value stories:
+      1. story_04_mise_en_place_split — prep_steps/active_steps columns exist
+         in recipes table (populated by AI parser). Cook UI: prep checklist
+         first, then active steps. No new schema needed. Pure UI work.
+      2. story_05_prep_batching_engine — cross-references weekly menu for
+         identical prep tasks. Pure function batchPrepTasks(menu). Needs
+         story_04 cooking UI to surface the batched tasks.
+      3. story_01b_recipe_review_edit_ui — editable AI review before DB save.
+         Depends on story_01 which is done. Good UX polish item.
+      Recommend story_04 next: no schema changes, prep_steps/active_steps
+      already exist, delivers a distinct user value (mise en place cooking
+      workflow) and unblocks story_05.
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"
