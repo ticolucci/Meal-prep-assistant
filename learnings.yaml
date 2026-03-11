@@ -336,6 +336,57 @@ learnings:
       already exist, delivers a distinct user value (mise en place cooking
       workflow) and unblocks story_05.
 
+  - id: l25_cooking_ui_implementation
+    story: story_04_mise_en_place_split
+    date: "2026-03-11"
+    context: >
+      story_04 is complete. Key files:
+        - src/lib/cooking.ts: parseSteps(json) — safely parses JSON array
+          from DB text column (null/invalid → []); isPrepDone(total, checked)
+          — pure boolean; returns true if total===0 or checked.size>=total.
+        - src/lib/cooking.test.ts: 11 unit tests covering null/undefined/
+          invalid JSON/non-array/non-string-elements/edge cases.
+        - src/app/prep/cook/[id]/page.tsx: RSC (force-dynamic). Fetches recipe
+          by ID. Returns data-testid="recipe-not-found" div for missing/invalid
+          ID. Parses prep_steps and active_steps via parseSteps().
+        - src/components/CookingClient.tsx: "use client". Shows prep checklist
+          (checkboxes) first; active steps are opacity-30 + pointer-events-none
+          until isPrepDone(). "Skip Prep" button (data-testid="skip-prep-btn")
+          sets prepSkipped=true immediately revealing active steps. Falls back
+          to raw recipe.instructions if both arrays are empty (TheMealDB rows).
+        - src/app/prep/page.tsx: RSC (force-dynamic). Queries latest approved
+          plan's recipes (joined via mealPlanRecipes). Falls back to ALL recipes
+          if no approved plan exists. Each row has data-testid="cook-link".
+    gotcha: >
+      waitForLoadState("networkidle") times out in the full Playwright suite
+      when TheMealDB HTTP calls are in flight. Fix: wait for a specific element
+      (e.g. recipe-card) to be visible instead. Use networkidle ONLY for pages
+      with no external HTTP calls.
+    gotcha2: >
+      shell.spec.ts:35 ("Plan tab routes to /plan") is a flaky pre-existing
+      failure in the full Playwright suite (intermittent on both chromium and
+      mobile). It passes in isolation. Root cause: timing/ordering when many
+      test files run sequentially. Do not attempt to fix — not related to app
+      code.
+
+  - id: l26_next_story_candidates
+    story: story_04_mise_en_place_split
+    date: "2026-03-11"
+    context: >
+      story_04 is complete (cooking UI with mise-en-place prep/active split,
+      11 unit tests + 12 E2E tests, all passing).
+      Next highest-value stories:
+      1. story_05_prep_batching_engine — cross-references weekly menu for
+         identical prep tasks, combines amounts. Pure function batchPrepTasks().
+         No schema changes needed. Unblocked by story_04. High algorithmic value.
+      2. story_01b_recipe_review_edit_ui — editable review panel before DB save.
+         Depends on story_01 (done). Good UX polish for AI-imported recipes.
+      3. story_06_prep_session_scheduler — drag-and-drop prep session builder.
+         Depends on story_05. More complex UI (DnD). Defer until story_05 done.
+      Recommend story_05 next: core logic is a pure batchPrepTasks() function
+      that is highly unit-testable, and it directly enhances the cooking workflow
+      just delivered by story_04.
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"
