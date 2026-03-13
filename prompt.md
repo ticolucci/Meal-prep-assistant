@@ -12,11 +12,18 @@ YOUR OBJECTIVE FOR THIS EXECUTION:
 
 STRICT EXECUTION PROTOCOL (TDD & RALPH LOOP):
 - STEP 1 (Selection): Acknowledge the single story you have chosen and briefly explain why it is the highest-value/unblocking choice right now.
-- STEP 2 (Test): Write the failing tests first. Do not write implementation code yet.
-- STEP 3 (Implement): Write the minimal Next.js/Drizzle/Playwright code required to make the tests pass.
-- STEP 4 (Verify): Ensure your code fulfills all acceptance criteria for the chosen story.
-- STEP 4.5 (Atomic Commit): Whenever you reach a meaningful, complete state where ALL tests pass and the codebase has changed significantly, make an atomic git commit immediately. This creates safe revert points. Use a clear, descriptive commit message. Do not batch multiple logical changes into one commit — one working milestone = one commit.
-- STEP 5 (State Persistence): Append your technical learnings, new dependencies, or structural context to `learnings.yaml`. This is how you pass memory to your future self in the next loop.
+- STEP 2 (Planning): Before writing any code, assess the complexity of the story.
+  - If the story is small and self-contained, list the files you will create or modify and move on.
+  - If the story is large or touches multiple concerns, break it into an ordered list of sub-tasks (e.g. "1. Schema migration, 2. Server Action, 3. UI component, 4. Tests"). Execute them one at a time.
+  - If the story is too large to implement safely in one iteration (risk of partial/broken state), split it into two or more smaller stories, add them to `stories.yaml`, implement only the first slice now, and note the remainder in `learnings.yaml`.
+- STEP 3 (Test): Write the failing tests first. Do not write implementation code yet.
+- STEP 4 (Implement): Work through each sub-task from your plan. Write the minimal Next.js/Drizzle/Playwright code required to make the tests pass.
+- STEP 5 (Verify): Ensure your code fulfills all acceptance criteria for the chosen story.
+- STEP 5.5 (Atomic Commit): Whenever you reach a meaningful, complete state where ALL tests pass and the codebase has changed significantly, make an atomic git commit immediately. This creates safe revert points. Use a clear, descriptive commit message. Do not batch multiple logical changes into one commit — one working milestone = one commit.
+- STEP 6 (State Persistence): Update `learnings.yaml` with:
+  - Technical decisions, gotchas, and structural context future iterations will need.
+  - Any refactoring opportunities you noticed but deliberately deferred (e.g. "RecipeCard is duplicated in two places — extract to a shared component when story_X is done").
+  - The next highest-value story candidate and why.
 
 CONSTRAINTS:
 - ATOMICITY: Do not build ahead. Implement ONLY the acceptance criteria for the selected story.
