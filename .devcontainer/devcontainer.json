@@ -1,0 +1,45 @@
+{
+  "name": "Meal Prep Assistant — Ralph Loop",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+
+  // Install system deps for Playwright (Chromium) and SQLite
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y libsqlite3-dev",
+
+  // After the container is created, install all tooling
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // Forward the port Next.js dev server uses
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "Next.js", "onAutoForward": "notify" }
+  },
+
+  // Codespaces secrets — set these in your GitHub repo / org settings:
+  //   ANTHROPIC_API_KEY, TURSO_DATABASE_URL, TURSO_AUTH_TOKEN
+  "secrets": {
+    "ANTHROPIC_API_KEY": { "description": "Anthropic API key for Claude Code" },
+    "TURSO_DATABASE_URL": { "description": "Turso database URL (use file:local.db for local dev)" },
+    "TURSO_AUTH_TOKEN": { "description": "Turso auth token (optional for local file DB)" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright",
+        "drizzle-team.drizzle-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+
+  "remoteEnv": {
+    // When no Turso cloud DB is configured, fall back to a local SQLite file
+    "TURSO_DATABASE_URL": "${localEnv:TURSO_DATABASE_URL:file:local.db}"
+  }
+}
