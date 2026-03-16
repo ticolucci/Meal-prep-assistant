@@ -17,9 +17,16 @@ A Next.js full-stack application that helps users organize weekly meal prep. It 
 | `prompt.md` | The system prompt that drives each Ralph loop execution |
 | `docs/index.md` | This file — project overview and architectural principles |
 | `docs/tos-analysis.md` | Terms of Service analysis for Mathem and ICA (reference only) |
+| `docs/architecture.md` | DB schema, page pattern, navigation, data flow — READ THIS to understand how the app is structured |
 | `docs/testing.md` | Testing philosophy, pyramid target, mock rules, factory pattern — READ THIS before writing any test |
 | `drizzle.config.ts` | Drizzle ORM / Turso configuration |
 | `src/db/index.ts` | Database client connection |
+| `src/db/schema.ts` | Drizzle table definitions — single source of truth for the DB shape |
+| `src/lib/` | Pure functions (no DB, no HTTP) — business logic lives here |
+| `src/app/actions/` | Next.js Server Actions — the only place that touches the DB or external APIs |
+| `src/components/` | Shared UI components; `*Client.tsx` suffix = `"use client"` |
+| `src/test/factories.ts` | DB factory functions for tests — `makeRecipe()`, `makeIngredient()`, etc. |
+| `src/db/test-client.ts` | Drizzle client pointed at `file:./test.db` — import this in integration tests |
 
 ## Architectural Principles
 
@@ -27,8 +34,4 @@ A Next.js full-stack application that helps users organize weekly meal prep. It 
 See `docs/testing.md` for the full strategy. Short version: unit tests (Vitest) for pure functions, integration tests (Vitest + real local SQLite `test.db`) for Server Actions and queries, E2E (Playwright) for user journeys only. Mock external HTTP and time; never mock the local DB or internal code.
 
 ### Evolving Database
-Do NOT design the full schema upfront. Each story creates only the tables and columns it immediately needs via Drizzle migrations. When a future story needs schema changes, create a migration to evolve the database. This mirrors TDD: minimal, incremental, just-in-time.
-
-- When implementing a story that needs data persistence, create a new schema file (e.g., `src/db/schema.ts`) or extend the existing one with only the tables/columns required by that story's acceptance criteria.
-- Run `npx drizzle-kit generate` to create the migration, then `npx drizzle-kit migrate` to apply it.
-- Never add columns or tables "because we'll need them later."
+Schema grows incrementally — each story adds only what it immediately needs. See `docs/architecture.md` for the current schema and migration workflow.

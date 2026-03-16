@@ -147,3 +147,74 @@ business-logic outcomes — that is integration test territory.
 ```
 
 Run `test:unit` during development for fast feedback. Run `test` in CI.
+
+---
+
+## Project-Specific Gotchas
+
+These are not general Playwright/Vitest advice — they are lessons specific to this codebase.
+
+### `vi.stubGlobal` must come before the module import
+
+Server Actions that call `fetch` (e.g. `parseRecipeText`) capture the `fetch` reference at module load time. Stubbing after import has no effect.
+
+```ts
+// ✓ Correct
+vi.stubGlobal("fetch", myMock);
+const { parseRecipeText } = await import("./parse-recipe"); // dynamic import after stub
+```
+
+### Integration test cleanup order
+
+Delete in FK-safe order (children before parents) in `beforeEach`:
+
+```ts
+await db.delete(mealPlanRecipes);
+await db.delete(mealPlans);
+await db.delete(recipeIngredients);
+await db.delete(recipes);
+// pantry_items and shopping_list_extra have no FK dependencies
+```
+
+### E2E: submit forms with `press("Enter")`, not force-click on the button
+
+`click({ force: true })` on a `<button type="submit">` does **not** reliably trigger the parent `<form>`'s `onSubmit` handler in Playwright.
+
+```ts
+// ✗ Unreliable
+await page.getByRole("button", { name: "Submit" }).click({ force: true });
+
+// ✓ Reliable
+await page.getByTestId("my-input").press("Enter");
+```
+
+### E2E: don't use `networkidle` on pages with outbound HTTP
+
+`waitForLoadState("networkidle")` times out when the page makes external HTTP calls (e.g. TheMealDB image loads). Wait for a specific visible element instead:
+
+```ts
+// ✗ Times out
+await page.waitForLoadState("networkidle");
+
+// ✓ Reliable
+await page.getByTestId("recipe-card").first().waitFor();
+```
+
+### E2E: nav link clicks need `{ force: true }` on mobile viewport
+
+The Next.js dev overlay (`nextjs-portal`) intercepts pointer events at the bottom of the viewport on narrow screens, blocking bottom nav clicks. Dev-mode artifact only — not a production issue.
+
+```ts
+await page.getByRole("link", { name: "Shopping" }).click({ force: true });
+```
+
+---
+
+## Known Pre-Existing Test Failures
+
+Do **not** investigate these when implementing new stories — they are pre-existing.
+
+| Test | File | Root Cause |
+|------|------|------------|
+| `"user can generate, swap, and approve a meal plan"` | `tests/meal-plan.spec.ts:33` | `MealPlanClient` uses `window.location.reload()`, which resets React state before the badge assertion. Fix: migrate to `router.refresh()`. |
+| `"Plan tab routes to /plan"` | `tests/shell.spec.ts:35` | Intermittent timing issue in the full Playwright suite; passes in isolation. No app code change needed. |
