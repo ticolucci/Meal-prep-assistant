@@ -387,6 +387,56 @@ learnings:
       that is highly unit-testable, and it directly enhances the cooking workflow
       just delivered by story_04.
 
+  - id: l27_prep_batching_implementation
+    story: story_05_prep_batching_engine
+    date: "2026-03-16"
+    context: >
+      story_05 is complete. Key files:
+        - src/lib/batching.ts: batchPrepTasks(menu: MenuEntry[]) pure function.
+          Groups ingredients by (name.toLowerCase(), prep.toLowerCase()) key.
+          Only includes groups that span 2+ distinct recipes (no self-batching).
+          Sums amounts when units match; sets unitMismatch=true if units differ
+          (and totalAmount=null). prepSafe flag from PREP_SAFE_KEYWORDS substring
+          allowlist (onion, garlic, carrot, celery, broccoli, mushroom, etc.).
+          Sorts: prepSafe=true first, then recipeCount DESC, then name ASC.
+        - src/lib/batching.test.ts: 15 unit tests. Covers empty menu, no-prep
+          ingredients, single-recipe (no batch), same-name-different-prep (no batch),
+          null amounts, unit mismatches, 3+ recipes, sort order, and self-batching
+          edge case.
+        - src/app/prep/page.tsx: getBatchedTasks() async function queries approved
+          plan's recipe ingredients, builds MenuEntry[], calls batchPrepTasks().
+          Batch section (data-testid="batch-prep-section") only renders when
+          batchedTasks.length > 0. Each task card has data-testid="batch-prep-task"
+          with either "prep-safe-badge" or "prep-not-safe-badge" child.
+        - tests/batch-prep.spec.ts: 8 E2E tests (4 × 2 browsers), all passing.
+    gotcha: >
+      The batch prep section will NOT appear for TheMealDB-seeded recipes because
+      their ingredients have null prep fields. Batch tasks only appear after
+      story_01 (AI parser) populates the prep field via normalizeIngredient().
+      To see the batch section in dev: import 2+ recipes that share a prep-tagged
+      ingredient (e.g. two recipes both needing "diced onion").
+    deferred: >
+      The batching logic is surfaced on the /prep page as a read-only section.
+      story_06 (Prep Session Scheduler) will allow the user to drag batch tasks
+      into a dedicated "Sunday prep session". Defer until story_06 is implemented.
+
+  - id: l28_next_story_candidates
+    story: story_05_prep_batching_engine
+    date: "2026-03-16"
+    context: >
+      story_05 is complete (batchPrepTasks(), /prep page batch section, 15 unit
+      tests + 8 E2E tests).
+      Next highest-value stories:
+      1. story_06_prep_session_scheduler — depends on story_05 (now done).
+         Drag-and-drop batch tasks into a dedicated prep session. More complex
+         UI (DnD) but directly extends the batch prep workflow just built.
+      2. story_01b_recipe_review_edit_ui — editable review before DB save.
+         Pure UI work, depends on story_01 (done). Good polish for AI flow.
+      3. story_11_user_risk_disclosure — first-run disclaimer for automation.
+         No schema complexity; just a consent screen + localStorage persistence.
+      Recommend story_06 next: it delivers the most user value by completing
+      the prep batching workflow (batch → assign to session → weeknight cook).
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"
