@@ -509,6 +509,64 @@ learnings:
       Recommend story_01b next: closes the AI workflow loop (import → review → save)
       and improves data quality for all downstream features.
 
+  - id: l31_recipe_review_edit_ui
+    story: story_01b_recipe_review_edit_ui
+    date: "2026-03-17"
+    context: >
+      story_01b is complete. The import flow is now: parse (no save) → editable
+      review panel → user edits → Save Recipe → DB write.
+      Key changes:
+        - src/app/actions/parse-recipe.ts: split into two Server Actions:
+            parseRecipeText(rawText) — calls Anthropic, returns parsed data,
+              does NOT write to DB. Exports ParsedRecipe and ParsedIngredient types.
+            saveRecipe(data: ParsedRecipe) — writes recipe + ingredients to DB,
+              calls revalidatePath("/recipes"). Returns SaveRecipeResult.
+        - src/components/RecipeImportForm.tsx: three-phase UI:
+            1. Import form (textarea + "Import Recipe" button).
+            2. Editable review panel (data-testid="review-panel"):
+               - Editable title input (data-testid="review-title").
+               - Ingredient rows (data-testid="review-ingredient-row") with
+                 amount, unit, prep, name inputs + remove button per row.
+               - "Add ingredient" button (data-testid="add-ingredient-btn").
+               - Prep steps list (data-testid="review-prep-step-row") with
+                 inline inputs + remove buttons.
+               - "Add prep step" button (data-testid="add-prep-step-btn").
+               - Active steps list (data-testid="review-active-step-row").
+               - "Add active step" button (data-testid="add-active-step-btn").
+               - "Cancel" button (data-testid="cancel-import-btn") — discards,
+                 returns to import form.
+               - "Save Recipe" button (data-testid="save-recipe-btn") — calls
+                 saveRecipe, disabled if title is empty.
+            3. Success screen (data-testid="import-success") with "View All
+               Recipes" button.
+      Tests: 6 integration tests + 4 E2E tests (chromium), all passing.
+    gotcha: >
+      textarea.press("Enter") does NOT submit a form — it inserts a newline.
+      Only single-line <input> elements submit on Enter. For forms with a
+      <textarea>, use getByTestId("submit-button").click({ force: true }) in
+      Playwright tests.
+    gotcha2: >
+      Playwright 1.58.2 expects chromium_headless_shell-1208, but the env only
+      had chromium_headless_shell-1194. Worked around by copying the 1194 binaries
+      to the 1208 path. The E2E test suite needs a proper `playwright install`
+      in a fresh environment before CI can run E2E tests.
+
+  - id: l32_next_story_candidates
+    story: story_01b_recipe_review_edit_ui
+    date: "2026-03-17"
+    context: >
+      story_01b is complete (editable AI review before DB save, parse-save split).
+      Next highest-value stories:
+      1. story_11_user_risk_disclosure — first-run consent screen for automation.
+         No schema complexity; consent in localStorage. Required before story_10.
+      2. story_10_grocery_cart_automation — Playwright headless cart orchestration.
+         Depends on story_03 (done) and story_11. No public API — Playwright only.
+      3. story_06b (DnD polish) — replace click-to-assign with @dnd-kit DnD.
+         Low priority; current UX is functional.
+      Recommend story_11 next: it is the last prerequisite before story_10
+      (grocery cart automation), and it is a low-complexity UI story
+      (localStorage + consent screen). Completes the safety chain for automation.
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"
