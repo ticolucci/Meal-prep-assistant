@@ -9,8 +9,10 @@ import { test, expect } from "@playwright/test";
 test.describe("Cooking UI — user journey", () => {
   test("prep page renders with a heading", async ({ page }) => {
     await page.goto("/prep");
+    // Use .first() because /prep page now has multiple headings matching /prep/i
+    // (main h1 "Prep", "Prep Sessions" section h2, "New Prep Session" form h3)
     await expect(
-      page.getByRole("heading", { name: /prep/i })
+      page.getByRole("heading", { name: /prep/i }).first()
     ).toBeVisible();
   });
 
@@ -99,6 +101,6 @@ test.describe("Cooking UI — user journey", () => {
     const prepLink = page.getByRole("link", { name: /prep/i }).first();
     await prepLink.click({ force: true });
     await expect(page).toHaveURL(/\/prep/);
-    await expect(page.getByRole("heading", { name: /prep/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /prep/i }).first()).toBeVisible();
   });
 });

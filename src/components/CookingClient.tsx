@@ -4,6 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { isPrepDone } from "@/lib/cooking";
 
+interface AlreadyPreppedTask {
+  name: string;
+  prep: string;
+}
+
 interface Props {
   recipeId: number;
   title: string;
@@ -11,6 +16,8 @@ interface Props {
   activeSteps: string[];
   /** Raw instructions fallback when both step arrays are empty */
   instructions: string | null;
+  /** Batch tasks from prep sessions that include this recipe — shown as "Already Prepped" */
+  alreadyPreppedTasks?: AlreadyPreppedTask[];
 }
 
 export default function CookingClient({
@@ -19,6 +26,7 @@ export default function CookingClient({
   prepSteps,
   activeSteps,
   instructions,
+  alreadyPreppedTasks = [],
 }: Props) {
   const [checkedPrep, setCheckedPrep] = useState<Set<number>>(new Set());
   const [prepSkipped, setPrepSkipped] = useState(false);
@@ -57,6 +65,29 @@ export default function CookingClient({
       >
         {title}
       </h1>
+
+      {/* ── Already Prepped in Session ──────────────────────────────────────── */}
+      {alreadyPreppedTasks.length > 0 && (
+        <section
+          data-testid="already-prepped-section"
+          className="mb-6 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-4"
+        >
+          <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 mb-2">
+            ✓ Already Prepped in Session
+          </h2>
+          <ul className="space-y-1">
+            {alreadyPreppedTasks.map((task, i) => (
+              <li
+                key={i}
+                data-testid="already-prepped-task"
+                className="text-sm text-emerald-700 dark:text-emerald-400 capitalize"
+              >
+                {task.prep} {task.name}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* ── Prep Steps ─────────────────────────────────────────────────────── */}
       {hasPrepSteps && (

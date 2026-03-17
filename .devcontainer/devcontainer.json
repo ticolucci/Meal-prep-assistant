@@ -39,7 +39,9 @@
   },
 
   "remoteEnv": {
-    // When no Turso cloud DB is configured, fall back to a local SQLite file
-    "TURSO_DATABASE_URL": "${localEnv:TURSO_DATABASE_URL:file:local.db}"
+    // NOTE: ${localEnv:VAR:default} cannot have colons in the default value —
+    // the colon acts as a separator and truncates the value. Do NOT set
+    // TURSO_DATABASE_URL here. It is set by post-create.sh via .env.local instead.
+    "TURSO_AUTH_TOKEN": "${localEnv:TURSO_AUTH_TOKEN:local}"
   }
 }

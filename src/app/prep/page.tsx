@@ -6,6 +6,8 @@ import { eq, desc, inArray } from "drizzle-orm";
 import Link from "next/link";
 import type { Recipe } from "@/db/schema";
 import { batchPrepTasks, type BatchedPrepTask, type MenuEntry } from "@/lib/batching";
+import { getPrepSessions, getAssignedTaskKeys } from "@/app/actions/prep-sessions";
+import PrepSessionClient from "@/components/PrepSessionClient";
 
 async function getCookableRecipes(): Promise<{
   recipes: Recipe[];
@@ -73,6 +75,8 @@ async function getBatchedTasks(
 export default async function PrepPage() {
   const { recipes: cookableRecipes, fromPlan, planId } = await getCookableRecipes();
   const batchedTasks = await getBatchedTasks(cookableRecipes, planId);
+  const sessions = await getPrepSessions();
+  const assignedKeys = await getAssignedTaskKeys();
 
   return (
     <div className="p-4 pb-8 max-w-lg mx-auto">
@@ -135,6 +139,21 @@ export default async function PrepPage() {
           </ul>
         </section>
       )}
+
+      {/* Prep Sessions section — always visible so user can create sessions */}
+      <section className="mb-8" data-testid="prep-sessions-section">
+        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-1">
+          Prep Sessions
+        </h2>
+        <p className="text-xs text-zinc-500 mb-3">
+          Create a dedicated prep session (e.g. Sunday batch-prep) and assign batch tasks to it.
+        </p>
+        <PrepSessionClient
+          batchedTasks={batchedTasks}
+          sessions={sessions}
+          assignedKeys={assignedKeys}
+        />
+      </section>
 
       {cookableRecipes.length === 0 ? (
         <div

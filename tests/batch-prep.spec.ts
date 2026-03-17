@@ -17,7 +17,8 @@ test.describe("Batch Prep Tasks", () => {
     page,
   }) => {
     await page.goto("/prep");
-    await expect(page.getByRole("heading", { name: /prep/i })).toBeVisible();
+    // Use .first() because /prep now has multiple headings matching /prep/i
+    await expect(page.getByRole("heading", { name: /prep/i }).first()).toBeVisible();
     // Cook links or empty state should be visible (no regression from story_04)
     const cookLinks = page.getByTestId("cook-link");
     const emptyState = page.getByTestId("prep-empty-state");
@@ -80,7 +81,7 @@ test.describe("Batch Prep Tasks", () => {
 
     // Go to /prep — TheMealDB recipes have null prep fields, so no batch tasks
     await page.goto("/prep");
-    await expect(page.getByRole("heading", { name: /prep/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /prep/i }).first()).toBeVisible();
 
     // The batch section should NOT appear because TheMealDB ingredients have null prep
     await expect(page.getByTestId("batch-prep-section")).not.toBeVisible();
@@ -99,7 +100,7 @@ test.describe("Batch Prep Tasks", () => {
     // we verify the data-testid attributes exist structurally by checking
     // the prep page renders at all (UI contract test).
     await page.goto("/prep");
-    await expect(page.getByRole("heading", { name: /prep/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /prep/i }).first()).toBeVisible();
 
     // If any batch tasks happen to exist (e.g. from previous E2E runs that
     // imported AI recipes), verify each task card has the expected structure.

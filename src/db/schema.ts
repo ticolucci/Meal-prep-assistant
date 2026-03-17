@@ -67,6 +67,30 @@ export const shoppingListExtra = sqliteTable("shopping_list_extra", {
     .default(sql`(unixepoch())`),
 });
 
+export const prepSessions = sqliteTable("prep_sessions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(), // ISO date string, e.g. "2026-03-17"
+  label: text("label").notNull().default("Prep Session"),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export const prepSessionTasks = sqliteTable("prep_session_tasks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  sessionId: integer("session_id")
+    .notNull()
+    .references(() => prepSessions.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  prep: text("prep").notNull(),
+  totalAmount: real("total_amount"), // null if unit mismatch or all amounts null
+  unit: text("unit"),
+  unitMismatch: integer("unit_mismatch").notNull().default(0), // 0 | 1
+  prepSafe: integer("prep_safe").notNull().default(0), // 0 | 1
+  recipeCount: integer("recipe_count").notNull().default(0),
+  recipeIds: text("recipe_ids").notNull().default("[]"), // JSON array of recipe IDs
+});
+
 export type Recipe = typeof recipes.$inferSelect;
 export type NewRecipe = typeof recipes.$inferInsert;
 export type RecipeIngredient = typeof recipeIngredients.$inferSelect;
@@ -79,3 +103,7 @@ export type NewPantryItem = typeof pantryItems.$inferInsert;
 export type ShoppingExtra = typeof shoppingListExtra.$inferSelect;
 export type NewShoppingExtra = typeof shoppingListExtra.$inferInsert;
 export type NewMealPlanRecipe = typeof mealPlanRecipes.$inferInsert;
+export type PrepSession = typeof prepSessions.$inferSelect;
+export type NewPrepSession = typeof prepSessions.$inferInsert;
+export type PrepSessionTask = typeof prepSessionTasks.$inferSelect;
+export type NewPrepSessionTask = typeof prepSessionTasks.$inferInsert;

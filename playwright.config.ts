@@ -25,7 +25,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // Explicitly pass DB env vars so the local file URL is correct even when
+    // the devcontainer remoteEnv sets a broken default (colon-split issue).
+    command:
+      "TURSO_DATABASE_URL=file:./local.db TURSO_AUTH_TOKEN=local npm run dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
