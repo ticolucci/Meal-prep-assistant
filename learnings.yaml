@@ -437,6 +437,78 @@ learnings:
       Recommend story_06 next: it delivers the most user value by completing
       the prep batching workflow (batch → assign to session → weeknight cook).
 
+  - id: l29_prep_session_implementation
+    story: story_06_prep_session_scheduler
+    date: "2026-03-17"
+    context: >
+      story_06 is complete (click-to-assign, not DnD — see deferred below).
+      Key files:
+        - drizzle/0004_slippery_stingray.sql: adds prep_sessions (id, date, label,
+          created_at) and prep_session_tasks (id, session_id FK w/cascade, name,
+          prep, total_amount, unit, unit_mismatch, prep_safe, recipe_count, recipeIds
+          as JSON TEXT).
+        - src/app/actions/prep-sessions.ts: createPrepSession(), deletePrepSession(),
+          assignBatchTask(), removeBatchTask(), getPrepSessions(),
+          getAssignedTaskKeys(). getAssignedTaskKeys() returns Set<"name::prep"> —
+          used to mark batch task buttons as disabled when already assigned.
+        - src/components/PrepSessionClient.tsx: "use client". Create-session form
+          always visible. Assign buttons disabled (grayed) when key is already
+          assigned to ANY session. Sessions section shows assigned tasks with
+          Remove button. Uses router.refresh() after mutations.
+        - src/app/prep/page.tsx: loads sessions + assignedKeys from DB, renders
+          PrepSessionClient below the Batch Prep Tasks section.
+        - src/app/prep/cook/[id]/page.tsx: queries prep_session_tasks for tasks
+          whose recipeIds JSON includes the current recipe; passes as
+          alreadyPreppedTasks to CookingClient.
+        - src/components/CookingClient.tsx: shows "✓ Already Prepped in Session"
+          banner above prep steps when alreadyPreppedTasks is non-empty.
+      Tests: 9 integration tests + 14 E2E tests (7 × 2 browsers), all passing.
+    gotcha: >
+      devcontainer.json remoteEnv uses ${localEnv:VAR:default} syntax. The default
+      value CANNOT contain colons — the colon is treated as a separator and only
+      the part before the first colon is used. Setting TURSO_DATABASE_URL=file:./local.db
+      via remoteEnv gave TURSO_DATABASE_URL="file" (just the scheme). Fix: do NOT
+      use remoteEnv for URLs with colons. Use post-create.sh to write .env.local.
+      playwright.config.ts webServer.command now explicitly sets:
+        TURSO_DATABASE_URL=file:./local.db TURSO_AUTH_TOKEN=local npm run dev
+      This overrides the broken shell env var from the devcontainer for all E2E tests.
+    gotcha2: >
+      Adding new headings to /prep (e.g. "Prep Sessions", "New Prep Session") caused
+      existing E2E tests to fail with Playwright strict-mode violations because
+      getByRole("heading", { name: /prep/i }) matched 9 elements. Fix: add .first()
+      after the locator call. Applied to tests/cooking.spec.ts and tests/batch-prep.spec.ts.
+      General rule: if a heading locator can match multiple elements (common on pages
+      with sub-sections), always use .first() or a more specific level/exact match.
+    deferred: >
+      story_06 implements click-to-assign instead of drag-and-drop because DnD
+      requires a library (e.g. @dnd-kit/core) and adds significant UI complexity.
+      The core user value (assign batch task to session) is fully delivered. DnD
+      polish can be added as a future story_06b.
+      The "Already Prepped" banner in the cook page shows the structured batch task
+      (name + prep) from sessions, but does NOT automatically check off matching
+      prep steps in the UI (no string→task mapping). This is by design — the user
+      can see what was prepped and manually skip those steps.
+
+  - id: l30_next_story_candidates
+    story: story_06_prep_session_scheduler
+    date: "2026-03-17"
+    context: >
+      story_06 is complete (prep session create/delete, batch task assign/remove,
+      Already Prepped in cook UI). Full workflow: batch → assign to session →
+      weeknight cook shows "Already Prepped".
+      Next highest-value stories:
+      1. story_01b_recipe_review_edit_ui — editable review before DB save.
+         Depends on story_01 (done). Pure UI work in RecipeImportForm.tsx.
+         No schema changes. Good polish for AI flow.
+      2. story_11_user_risk_disclosure — first-run consent screen for automation.
+         No schema complexity; consent in localStorage. Required before story_10.
+      3. story_10_grocery_cart_automation — Playwright headless cart orchestration.
+         Depends on story_03 (done) and story_11. No public API — Playwright only.
+      4. story_06b (DnD polish) — replace click-to-assign with @dnd-kit DnD.
+         Low priority; current UX is functional.
+      Recommend story_01b next: closes the AI workflow loop (import → review → save)
+      and improves data quality for all downstream features.
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"
