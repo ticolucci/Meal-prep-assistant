@@ -12,6 +12,13 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+
+# local database files
+*.db
+*.db-shm
+*.db-wal
 
 # next.js
 /.next/
