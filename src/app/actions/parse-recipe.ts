@@ -28,16 +28,18 @@ Rules:
 - If no amount is specified, set "amount" to null.
 - Normalize fractions (e.g. "1/2" → 0.5, "1 1/4" → 1.25).`;
 
-interface ParsedRecipe {
+export interface ParsedIngredient {
+  name: string;
+  prep: string | null;
+  amount: number | null;
+  unit: string;
+}
+
+export interface ParsedRecipe {
   title: string;
   prep_steps: string[];
   active_steps: string[];
-  ingredients: Array<{
-    name: string;
-    prep: string | null;
-    amount: number | null;
-    unit: string;
-  }>;
+  ingredients: ParsedIngredient[];
 }
 
 export interface ParseRecipeResult {
@@ -47,13 +49,15 @@ export interface ParseRecipeResult {
   parsed?: ParsedRecipe;
 }
 
+/**
+ * Calls the Anthropic API to parse raw recipe text into structured data.
+ * Does NOT save to the database — call saveRecipe() after the user reviews.
+ */
 export async function parseRecipeText(rawText: string): Promise<ParseRecipeResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return { success: false, message: "ANTHROPIC_API_KEY is not configured" };
   }
-
-  let parsed: ParsedRecipe;
 
   try {
     const res = await fetch(ANTHROPIC_API_URL, {
@@ -80,31 +84,43 @@ export async function parseRecipeText(rawText: string): Promise<ParseRecipeResul
 
     const data = await res.json();
     const text: string = data?.content?.[0]?.text ?? "";
+    const parsed = JSON.parse(text) as ParsedRecipe;
 
-    parsed = JSON.parse(text) as ParsedRecipe;
+    return { success: true, message: "Recipe parsed successfully", parsed };
   } catch (err) {
     return {
       success: false,
       message: err instanceof Error ? err.message : "Failed to parse recipe",
     };
   }
+}
 
-  // Persist to DB
+export interface SaveRecipeResult {
+  success: boolean;
+  message: string;
+  recipeId?: number;
+}
+
+/**
+ * Saves a reviewed (and possibly edited) recipe to the database.
+ * Called after the user has reviewed the AI-parsed output.
+ */
+export async function saveRecipe(data: ParsedRecipe): Promise<SaveRecipeResult> {
   try {
     const [inserted] = await db
       .insert(recipes)
       .values({
-        title: parsed.title,
-        instructions: parsed.active_steps.join("\n"),
-        prepSteps: JSON.stringify(parsed.prep_steps),
-        activeSteps: JSON.stringify(parsed.active_steps),
+        title: data.title,
+        instructions: data.active_steps.join("\n"),
+        prepSteps: JSON.stringify(data.prep_steps),
+        activeSteps: JSON.stringify(data.active_steps),
         source: "ai",
       })
       .returning({ id: recipes.id });
 
-    if (parsed.ingredients.length > 0) {
+    if (data.ingredients.length > 0) {
       await db.insert(recipeIngredients).values(
-        parsed.ingredients.map((ing) => ({
+        data.ingredients.map((ing) => ({
           recipeId: inserted.id,
           name: ing.name,
           prep: ing.prep,
@@ -119,9 +135,8 @@ export async function parseRecipeText(rawText: string): Promise<ParseRecipeResul
 
     return {
       success: true,
-      message: `Recipe "${parsed.title}" saved successfully`,
+      message: `Recipe "${data.title}" saved successfully`,
       recipeId: inserted.id,
-      parsed,
     };
   } catch (err) {
     return {
