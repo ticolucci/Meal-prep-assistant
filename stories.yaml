@@ -141,3 +141,50 @@ stories:
       - Acceptance is persisted (e.g., in local storage or the database) so the screen is not shown again.
       - A "System Capabilities" section is accessible from app settings, summarizing what the tool can and cannot do.
       - See docs/tos-analysis.md for the full Mathem/ICA ToS analysis backing these decisions.
+
+  - id: story_12_deployment_pipeline
+    title: CI/CD Pipeline with Vercel & Turso
+    description: >
+      As a developer, I want a GitHub Actions CI/CD pipeline that runs lint, tests,
+      and build checks on every push, deploys to Vercel with Turso database migrations
+      on merge to main, and creates isolated preview environments with branch databases
+      for pull requests — modeled after the proven pipeline in ticolucci/itunes-port-to-spotify.
+    acceptance_criteria:
+      - GitHub Actions workflow ci-cd.yml with jobs lint, test, build, deploy, preview, and e2e-preview.
+      - lint job runs npm run lint and npm run test:types (TypeScript type checking).
+      - test job runs npm run test:unit with test environment variables.
+      - build job runs npm run build and depends on lint + test passing.
+      - deploy job (push to main only) runs npm run db:migrate against production Turso, then deploys via Vercel CLI.
+      - preview job (PRs only) creates an isolated Turso branch database meal-prep-pr-<PR_NUMBER> seeded from production, runs migrations, deploys Vercel preview with branch DB credentials, and posts a status comment on the PR.
+      - e2e-preview job (PRs only, after preview) installs Playwright Chromium, extracts preview URL from the PR comment, and runs npm run test:e2e against the live preview.
+      - Separate cleanup-preview.yml workflow deletes the Turso branch database when a PR is closed.
+      - vercel.json configured with ignoreCommand exit 0 to prevent Vercel auto-deploys.
+      - .vercelignore excludes test files, docs, dev configs, and local DB files from Vercel builds.
+      - .env.example created with all required environment variables documented.
+      - package.json has db:migrate and test:types scripts.
+      - playwright.config.ts supports BASE_URL env var override for running E2E against preview deployments.
+      - docs/deployment.md documents the full pipeline, all required GitHub secrets, one-time manual setup steps, and troubleshooting.
+
+  - id: story_13_google_oauth
+    title: Google OAuth Authentication
+    description: >
+      As a developer, I want to add Google OAuth authentication using NextAuth.js
+      so that only authorized users can access the application, protecting personal
+      meal planning data.
+    acceptance_criteria:
+      - NextAuth.js (Auth.js v5) integrated with Google OAuth provider.
+      - middleware.ts protects all routes except /auth/*, /api/auth/*, and static files.
+      - Login page with Sign in with Google button.
+      - ALLOWED_EMAIL environment variable restricts access to a single authorized email address.
+      - Session information available in both Server Components and Client Components.
+      - VERCEL_AUTOMATION_BYPASS_SECRET support in middleware to allow E2E tests to bypass auth (header x-vercel-protection-bypass).
+      - E2E tests updated to send the bypass header when running against preview deployments.
+      - All existing E2E tests continue to pass with auth bypass in CI.
+      - docs/deployment.md updated with new required secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_SECRET, ALLOWED_EMAIL, VERCEL_AUTOMATION_BYPASS_SECRET).
+    annotations:
+      e2e_impact: >
+        This story requires updating all Playwright E2E tests and the CI/CD preview
+        pipeline (story_12) to inject VERCEL_AUTOMATION_BYPASS_SECRET as an env var
+        on preview deployments, and to configure Playwright to send the
+        x-vercel-protection-bypass header on all requests when running in CI.
+    depends_on: story_12_deployment_pipeline
