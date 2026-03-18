@@ -567,6 +567,59 @@ learnings:
       (grocery cart automation), and it is a low-complexity UI story
       (localStorage + consent screen). Completes the safety chain for automation.
 
+  - id: l33_consent_gate_implementation
+    story: story_11_user_risk_disclosure
+    date: "2026-03-18"
+    context: >
+      story_11 is complete. No DB schema changes were needed.
+      Key files:
+        - src/components/ConsentGate.tsx: "use client" component. Reads
+          localStorage.getItem("automationConsentAccepted") in useEffect to
+          avoid SSR/hydration mismatch. Returns null while the value is being
+          read (avoids flash). Wraps children once accepted; shows a full-screen
+          overlay with the disclaimer when not yet accepted.
+          localStorage key: "automationConsentAccepted" (value "true").
+        - src/app/settings/page.tsx: plain RSC. "System Capabilities" section
+          with what the tool automates, what it does NOT do, user responsibility,
+          and personal-use disclaimer. Accessible via /settings.
+        - src/app/shopping/page.tsx: wraps ShoppingListClient in <ConsentGate>.
+          The gate only appears on first visit; subsequent visits (consent
+          accepted) render the shopping list directly.
+        - tests/consent.spec.ts: 8 E2E tests (chromium). All pass.
+        - tests/shopping.spec.ts: added beforeEach that pre-accepts consent
+          (localStorage.setItem) so existing shopping tests are not broken by
+          the new gate.
+    gotcha: >
+      addInitScript (Playwright) runs on EVERY page load including reloads
+      within the same test. Using it in beforeEach to clear localStorage caused
+      the persistence test to fail because the script cleared localStorage again
+      on page.reload(). Fix: use page.goto("/") + page.evaluate(() =>
+      localStorage.removeItem("key")) instead — evaluate runs once at the
+      current point in time and does not repeat on reload.
+    gotcha2: >
+      ConsentGate returns null (not a spinner or empty div) while localStorage
+      is being read to avoid flash-of-unstyled-consent. This means the shopping
+      page briefly renders nothing on first load. If this becomes a UX concern,
+      consider a minimal skeleton placeholder, but for now the flash is
+      imperceptible.
+
+  - id: l34_next_story_candidates
+    story: story_11_user_risk_disclosure
+    date: "2026-03-18"
+    context: >
+      story_11 is complete (ConsentGate, /settings System Capabilities,
+      localStorage persistence, 8 E2E tests).
+      Next highest-value stories:
+      1. story_10_grocery_cart_automation — now fully unblocked (story_03 +
+         story_11 are both done). Playwright headless script that iterates
+         the shopping list, searches each item, and clicks "Add to Cart".
+         User must be logged in manually. Missed items returned to UI.
+         No public API — Playwright headless only (Mathem/ICA).
+      2. story_06b (DnD polish) — replace click-to-assign with @dnd-kit.
+         Low priority; current UX is functional.
+      Recommend story_10 next: it is the flagship end-to-end feature that
+      closes the full weekly prep loop (plan → shop → automate).
+
   - id: l10_test_pyramid_gap
     story: cross-cutting
     date: "2026-03-08"

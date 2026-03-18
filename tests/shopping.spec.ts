@@ -8,6 +8,15 @@ import { test, expect } from "@playwright/test";
  * on structure and user interactions rather than exact data assertions.
  */
 test.describe("Shopping List — user journey", () => {
+  test.beforeEach(async ({ page }) => {
+    // Pre-accept the automation consent so the shopping list is visible.
+    // Consent is gated by localStorage; set it before navigating to /shopping.
+    await page.goto("/");
+    await page.evaluate(() =>
+      localStorage.setItem("automationConsentAccepted", "true")
+    );
+  });
+
   test("shopping page renders without error", async ({ page }) => {
     await page.goto("/shopping");
     await expect(
