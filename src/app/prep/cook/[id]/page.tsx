@@ -57,7 +57,6 @@ export default async function CookPage({ params }: Props) {
 
   return (
     <CookingClient
-      recipeId={recipe.id}
       title={recipe.title}
       prepSteps={prepSteps}
       activeSteps={activeSteps}

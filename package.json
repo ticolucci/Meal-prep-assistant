@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test:unit": "vitest run",
+    "test:types": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test": "vitest run && playwright test"
+    "test": "vitest run && playwright test",
+    "db:migrate": "npx drizzle-kit migrate"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",

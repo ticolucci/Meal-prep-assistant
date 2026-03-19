@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { testDb } from "@/db/test-client";
 import { recipes, recipeIngredients, mealPlans, mealPlanRecipes } from "@/db/schema";
 import { makeRecipe, makeIngredient } from "@/test/factories";
-import { eq } from "drizzle-orm";
 import { batchPrepTasks, type MenuEntry } from "@/lib/batching";
 
 // Mirrors the getBatchedTasks logic from prep/page.tsx so we can test the

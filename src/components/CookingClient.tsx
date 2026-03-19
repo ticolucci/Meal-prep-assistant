@@ -10,7 +10,6 @@ interface AlreadyPreppedTask {
 }
 
 interface Props {
-  recipeId: number;
   title: string;
   prepSteps: string[];
   activeSteps: string[];
@@ -21,7 +20,6 @@ interface Props {
 }
 
 export default function CookingClient({
-  recipeId: _recipeId,
   title,
   prepSteps,
   activeSteps,

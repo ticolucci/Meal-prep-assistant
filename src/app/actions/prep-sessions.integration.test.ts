@@ -8,26 +8,6 @@ import {
   prepSessions,
   prepSessionTasks,
 } from "@/db/schema";
-import { makeRecipe } from "@/test/factories";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-async function makeApprovedPlan(recipeIds: number[]) {
-  const [plan] = await testDb
-    .insert(mealPlans)
-    .values({ status: "approved", mealCount: recipeIds.length, params: "{}" })
-    .returning();
-  if (recipeIds.length > 0) {
-    await testDb.insert(mealPlanRecipes).values(
-      recipeIds.map((id, idx) => ({
-        planId: plan.id,
-        recipeId: id,
-        position: idx,
-      }))
-    );
-  }
-  return plan;
-}
 
 // ─── Table cleanup ────────────────────────────────────────────────────────────
 
@@ -163,7 +143,7 @@ describe("getPrepSessions", () => {
       .values({ date: "2026-03-17", label: "Sunday" })
       .returning();
 
-    const [s2] = await testDb
+    await testDb
       .insert(prepSessions)
       .values({ date: "2026-03-18", label: "Monday" })
       .returning();

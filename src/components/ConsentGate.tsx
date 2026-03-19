@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 
 const CONSENT_KEY = "automationConsentAccepted";
@@ -11,20 +11,24 @@ export default function ConsentGate({
   children: React.ReactNode;
 }) {
   const [accepted, setAccepted] = useState<boolean | null>(null);
+  const [checked, setChecked] = useState(false);
 
-  useEffect(() => {
-    setAccepted(localStorage.getItem(CONSENT_KEY) === "true");
+  // Read localStorage once on first render (client only)
+  if (!checked && typeof window !== "undefined") {
+    const stored = localStorage.getItem(CONSENT_KEY) === "true";
+    if (stored !== accepted) setAccepted(stored);
+    setChecked(true);
+  }
+
+  const handleAccept = useCallback(() => {
+    localStorage.setItem(CONSENT_KEY, "true");
+    setAccepted(true);
   }, []);
 
   // Avoid flash: render nothing until we've read localStorage
-  if (accepted === null) return null;
+  if (!checked) return null;
 
   if (accepted) return <>{children}</>;
-
-  function handleAccept() {
-    localStorage.setItem(CONSENT_KEY, "true");
-    setAccepted(true);
-  }
 
   return (
     <div
