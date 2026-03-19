@@ -53,7 +53,7 @@ export default function MealPlanClient({ initialPlan, allRecipes }: Props) {
 
   function handleGenerate() {
     startTransition(async () => {
-      const newPlan = await generateMealPlan({
+      await generateMealPlan({
         mealCount,
         maxPrepMinutes: maxPrepMinutes ? Number(maxPrepMinutes) : undefined,
         includeIngredients: parseIngredientList(includeIngredients),
@@ -67,15 +67,14 @@ export default function MealPlanClient({ initialPlan, allRecipes }: Props) {
     });
   }
 
-  function handleSwap(planRecipeId: number, oldRecipeId: number, idx: number) {
+  function handleSwap(idx: number) {
     setSwappingIdx(idx);
   }
 
   function handleSwapConfirm(
     planId: number,
     oldRecipeId: number,
-    newRecipeId: number,
-    idx: number
+    newRecipeId: number
   ) {
     startTransition(async () => {
       await swapMeal({ planId, oldRecipeId, newRecipeId });
@@ -219,7 +218,7 @@ export default function MealPlanClient({ initialPlan, allRecipes }: Props) {
                   {plan.status === "draft" && (
                     <button
                       onClick={() =>
-                        handleSwap(meal.planRecipeId, meal.recipe.id, idx)
+                        handleSwap(idx)
                       }
                       className="text-sm text-emerald-600 font-medium px-3 py-1.5 border border-emerald-200 rounded-lg"
                       data-testid={`swap-button-${idx}`}
@@ -244,8 +243,7 @@ export default function MealPlanClient({ initialPlan, allRecipes }: Props) {
                             handleSwapConfirm(
                               plan.planId,
                               meal.recipe.id,
-                              Number(e.target.value),
-                              idx
+                              Number(e.target.value)
                             );
                           }
                         }}
